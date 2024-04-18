@@ -1,0 +1,18 @@
+Assignment - Backend developer
+Using Express js and MongoDB
+1. Create APIs for an user to register into a website using email and password
+2. An OTP should be sent to the email of the user to validate the user.
+3. When a user validates his/her account, the user should add extra information like location, age and work details and save it in the database.
+4. Create APIs to login for a given email and password and generate a JWT token for authentication.
+5. Write an additional GET request to retrieve all the information of the user when he logs in using the JWT token generated when the user logs in.
+
+
+Follow the industry standards for writing clean code. Submit a document with all the screenshots of each API from POSTMAN and also show the mongoDB schema in the document that you attach with your outputs.
+
+
+Note:
+- Push your code on GitHub, set the repository access to public, and share the link to the repository with us. 
+- ⁠Your commit history will be checked, so please ensure that you don’t push all of the code in a single commit.
+- ⁠Plagiarism is not advised. 
+- ⁠The assignment deadline is 12 pm on Saturday, April 20th.
+- ⁠Please reach out to <hello@monter.one> if you have any concerns.
