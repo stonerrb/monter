@@ -16,7 +16,11 @@ const otpSchema = new mongoose.Schema({
   created_at: {
     type: Date,
     default: Date.now,
-    expires: 300,
+  },
+
+  expires_at: {
+    type: Date,
+    default: Date.now() + 3600000,
   },
 });
 
