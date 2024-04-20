@@ -4,7 +4,6 @@ const cors = require('cors');
 require('./db/mongoose');
 require('dotenv').config();
 
-
 const userRouter = require('./routes/user');
 //------Main App------//
 

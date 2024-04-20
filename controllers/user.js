@@ -4,10 +4,8 @@ const nodemailer = require('nodemailer');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-const User = require('../models/Users');
+const User = require('../models/users');
 const OTP = require('../models/otp');
-
-const authenticateToken = require('../middleware/auth');
 
 const transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
@@ -39,9 +37,6 @@ const userSignup = async (req, res) => {
                 await newUser.save();
                 // OTP verification
                 await sendVerificationOTP(newUser, res);
-
-                // Once OTP verification is complete, send the success response
-                // return res.status(200).send("User registered successfully");
             }
         }
     } catch (err) {
