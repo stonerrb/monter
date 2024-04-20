@@ -8,9 +8,8 @@ const User = require('../models/Users');
 const OTP = require('../models/otp');
 
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
+    host: 'smtp.ethereal.email',
     port: 587,
-    secure: false,
     auth: {
         user: process.env.user,
         pass: process.env.pass,
@@ -36,12 +35,11 @@ const userSignup = async (req, res) => {
                 });
 
                 await newUser.save();
-
                 // OTP verification
                 await sendVerificationOTP(newUser, res);
 
                 // Once OTP verification is complete, send the success response
-                return res.status(200).send("User registered successfully");
+                // return res.status(200).send("User registered successfully");
             }
         }
     } catch (err) {
@@ -53,7 +51,7 @@ const userSignup = async (req, res) => {
 const sendVerificationOTP = async ({_id, email }, res) => {
     try {
         const otp = Math.floor(100000 + Math.random() * 900000);
-        
+        console.log(otp);
         //mail OTP
         const mailOptions = {
             from: process.env.user,
@@ -61,19 +59,16 @@ const sendVerificationOTP = async ({_id, email }, res) => {
             subject: "OTP for Verification",
             html: `<h2>Your OTP is ${otp}</h2><br><p>OTP is valid for 1 hr</p>`,
         }
-
-        // has the otp 
-        const hashedOTP = bcrypt.hash(otp, 10)
+        
+        const hashedOTP = await bcrypt.hash(otp.toString(), 10);
 
         // Save OTP
         const newOTP = new OTP({
-            user: _id,
+            userID: _id,
             otp: hashedOTP
         });
 
         await newOTP.save();
-
-        console.log("god was here")
 
         transporter.sendMail(mailOptions, (err, info) => {
             if (err) {
@@ -87,4 +82,42 @@ const sendVerificationOTP = async ({_id, email }, res) => {
     }
 }
 
-module.exports = { userSignup };
+const OTPverify = async (req, res) => {
+    try{
+        let { userID,  otp } = req.body;
+        if(!userID || !otp){
+            return res.status(400).send("Enter all fields");
+        }else{
+            const record = await OTP.find({userID});
+            if(record.length<=0){
+                throw new Error("No records");
+            }else{
+                //otp exists already
+                const expiresAt= record[0].expires_at;
+                const hashedOTP = record[0].otp;
+                
+                if(expiresAt < Date.now()){
+                    //otp expired
+                    await OTP.deleteOne({ userID });
+                    throw new Error("OTP expired, Request again");
+                }else{
+                    const isValid = await bcrypt.compare(otp.toString(), hashedOTP);
+
+                    if(!isValid){
+                        throw new Error("Invalid OTP");
+                    }else{
+                        //success
+                        await User.updateOne({ _id: userID }, { verified: true });
+                        await OTP.deleteMany({ userID });
+                        res.json({ message: "User verified successfully" });
+                    }
+                }
+            }
+        }
+    }
+    catch(err){
+        return res.status(400).send({ message: "Something went wrong", err });
+    }
+};
+
+module.exports = { userSignup, OTPverify };
