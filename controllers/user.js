@@ -7,6 +7,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/Users');
 const OTP = require('../models/otp');
 
+const authenticateToken = require('../middleware/auth');
+
 const transporter = nodemailer.createTransport({
     host: 'smtp.ethereal.email',
     port: 587,
@@ -120,4 +122,60 @@ const OTPverify = async (req, res) => {
     }
 };
 
-module.exports = { userSignup, OTPverify };
+const addInfo = async (req, res) => {
+    const { email, name, age, location, work_details } = req.body;
+    try {
+        const user = await User
+            .findOne({ email })
+            .select('_id email verified');
+        if (!user) {
+            return res.status(400).send("User not found");
+        }
+        if (!user.verified) {
+            return res.status(400).send("User not verified");
+        }
+        const response = await user.updateOne({ name, age, location, work_details });
+        return res.status(200).json({message: "User info added successfully", response}); //fix the response thing
+    }
+    catch (err) {
+        return res.status(400).send({ message: "Something went wrong", err });
+    }
+}
+
+const userLogin = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) {
+            return res.status(400).json({ message: "All input fields are required" });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+        
+        const isValid = await bcrypt.compare(password, user.password);
+        if (!isValid) {
+            return res.status(400).json({ message: "Invalid email or password" });
+        }
+        
+        const token = jwt.sign({ _id: user._id }, process.env.JWT_SECRET);
+        
+        user.tokens = user.tokens.concat({ token });
+        await user.save();
+        return res.status(200).json({ message: "User logged in successfully", token });
+    } catch (err) {
+        return res.status(500).json({ message: "Something went wrong" });
+    }
+}
+
+const getUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password -tokens');
+        return res.status(200).json(user);
+    } catch (err) {
+        return res.status(500).json({ message: "Something went wrong" });
+    }
+}
+
+module.exports = { userSignup, OTPverify, addInfo, userLogin, getUser };
