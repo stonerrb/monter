@@ -71,7 +71,7 @@ const sendVerificationOTP = async ({_id, email }, res) => {
             if (err) {
                 return res.status(400).send({ message: "Something went wrong", err });
             } else {
-                return res.status(200).send({ message: "OTP sent successfully", otp });
+                return res.status(200).send({ message: "OTP sent successfully", otp, _id });
             }
         });
     } catch (err) {
@@ -105,8 +105,9 @@ const OTPverify = async (req, res) => {
                     }else{
                         //success
                         await User.updateOne({ _id: userID }, { verified: true });
+                        const user = await User.findOne({ _id: userID });
                         await OTP.deleteMany({ userID });
-                        res.json({ message: "User verified successfully" });
+                        res.json({ message: "User verified successfully", user });
                     }
                 }
             }
@@ -130,7 +131,7 @@ const addInfo = async (req, res) => {
             return res.status(400).send("User not verified");
         }
         const response = await user.updateOne({ name, age, location, work_details });
-        return res.status(200).json({message: "User info added successfully", response}); //fix the response thing
+        return res.status(200).json({message: "User info added successfully", user});
     }
     catch (err) {
         return res.status(400).send({ message: "Something went wrong", err });
