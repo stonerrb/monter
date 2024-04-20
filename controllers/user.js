@@ -71,7 +71,7 @@ const sendVerificationOTP = async ({_id, email }, res) => {
             if (err) {
                 return res.status(400).send({ message: "Something went wrong", err });
             } else {
-                return res.status(200).send({ message: "OTP sent successfully" });
+                return res.status(200).send({ message: "OTP sent successfully", otp });
             }
         });
     } catch (err) {
